@@ -1,4 +1,5 @@
 using Ambev.DeveloperEvaluation.Domain.Common;
+using Ambev.DeveloperEvaluation.Domain.Enums;
 
 namespace Ambev.DeveloperEvaluation.Domain.Entities;
 
@@ -43,9 +44,10 @@ public class Sale : BaseEntity
     public decimal TotalAmount { get; set; }
 
     /// <summary>
-    /// Indicates whether the sale has been cancelled.
+    /// Gets the sale's current status.
+    /// Indicates whether the sale is active, or cancelled in the system.
     /// </summary>
-    public bool IsCancelled { get; set; }
+    public Status Status { get; set; } = Status.Active;
 
     /// <summary>
     /// List of items that compose the sale.
