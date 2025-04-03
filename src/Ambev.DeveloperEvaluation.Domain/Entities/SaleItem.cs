@@ -32,7 +32,13 @@ public class SaleItem : BaseEntity
     /// Type of discount applied to this item based on quantity purchased.
     /// This represents the discount category (e.g., None, TenPercent, TwentyPercent), not a monetary value.
     /// </summary>
-    public DiscountType Discount { get; set; } = DiscountType.None;
+    public DiscountType DiscountType { get; set; } = DiscountType.None;
+
+    /// <summary>
+    /// Type of discount applied to this item based on quantity purchased.
+    /// This represents the discount category (e.g., None, TenPercent, TwentyPercent), not a monetary value.
+    /// </summary>
+    public decimal Discount { get; set; }
 
     /// <summary>
     /// Total amount for this item (after discount).
