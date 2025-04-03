@@ -1,12 +1,9 @@
 #!/usr/bin/env pwsh
-# Aplica as migrations do EF Core utilizando caminhos relativos ao diretório deste script
 
-# $PSScriptRoot contém o diretório onde o script está localizado
 Write-Host "Script directory: $PSScriptRoot"
 
-# Monta os caminhos absolutos dos arquivos de projeto (ajuste o caminho relativo conforme sua estrutura)
-$projectPath = Join-Path $PSScriptRoot "../src/Ambev.DeveloperEvaluation.WebApi/Ambev.DeveloperEvaluation.WebApi.csproj"
-$startupPath = $projectPath  # Se o startup project for o mesmo
+$projectPath = Join-Path $PSScriptRoot "../src/Ambev.DeveloperEvaluation.ORM/Ambev.DeveloperEvaluation.ORM.csproj"
+$startupPath =  Join-Path $PSScriptRoot "../src/Ambev.DeveloperEvaluation.WebApi/Ambev.DeveloperEvaluation.WebApi.csproj"
 
 Write-Host "Applying Migrations..."
 Write-Host "Project: $projectPath"
