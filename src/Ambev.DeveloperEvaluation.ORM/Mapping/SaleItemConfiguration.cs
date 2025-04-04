@@ -27,5 +27,11 @@ public class SaleItemConfiguration : IEntityTypeConfiguration<SaleItem>
         builder.Property(i => i.Status)
             .HasConversion<string>()
             .HasMaxLength(20);
+        
+        builder.HasOne(i => i.Sale)
+            .WithMany(s => s.Items)
+            .HasForeignKey(i => i.SaleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
     }
 }
