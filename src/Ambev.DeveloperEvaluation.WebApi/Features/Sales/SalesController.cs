@@ -76,25 +76,45 @@ namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales
             }
 
             var command = mapper.Map<GetSaleCommand>(id);
-            var result = await mediator.Send(command, cancellationToken);
 
-            if (result is null)
+            try
+            {
+                var result = await mediator.Send(command, cancellationToken);
+
+                if (result is null)
+                {
+                    return NotFound(new ApiResponse
+                    {
+                        Success = false,
+                        Message = $"The sale with ID {id} does not exist in our database",
+                        Errors = []
+                    });
+                }
+
+                var response = mapper.Map<GetSaleResponse>(result);
+                return Ok(new ApiResponseWithData<GetSaleResponse>
+                {
+                    Success = true,
+                    Message = "Sale retrieved successfully",
+                    Data = response
+                });
+            }
+            catch (KeyNotFoundException ex)
             {
                 return NotFound(new ApiResponse
                 {
                     Success = false,
-                    Message = $"The sale with ID {id} does not exist in our database",
-                    Errors = []
+                    Message = "Sale not found",
+                    Errors = new[]
+                    {
+                        new ValidationErrorDetail
+                        {
+                            Error = "ResourceNotFound",
+                            Detail = ex.Message
+                        }
+                    }
                 });
             }
-
-            var response = mapper.Map<GetSaleResponse>(result);
-            return Ok(new ApiResponseWithData<GetSaleResponse>
-            {
-                Success = true,
-                Message = "Sale retrieved successfully",
-                Data = response
-            });
         }
 
 
