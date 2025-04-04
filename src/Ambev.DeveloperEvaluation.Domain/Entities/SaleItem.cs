@@ -50,4 +50,14 @@ public class SaleItem : BaseEntity
     /// Indicates whether the sale item is active, or cancelled in the system.
     /// </summary>
     public Status Status { get; set; } = Status.Active;
+
+    /// <summary>
+    /// External identity: Sale ID to which this item belongs.
+    /// </summary>
+    public Guid SaleId { get; set; }
+
+    /// <summary>
+    /// Navigation property: The sale this item belongs to.
+    /// </summary>
+    public Sale Sale { get; set; } = null!;
 }

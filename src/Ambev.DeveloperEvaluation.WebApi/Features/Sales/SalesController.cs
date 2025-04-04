@@ -9,6 +9,9 @@ using Ambev.DeveloperEvaluation.Application.Sales.GetSales;
 using Ambev.DeveloperEvaluation.Common.Validation;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSales;
+using Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
+using Ambev.DeveloperEvaluation.WebApi.Features.Sales.UpdateSale;
+using FluentValidation;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales
 {
@@ -60,20 +63,38 @@ namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales
             var validationResult = await validator.ValidateAsync(request, cancellationToken);
 
             if (!validationResult.IsValid)
-                return BadRequest(validationResult.Errors);
+            {
+                var errors = validationResult.Errors.Select(f => (ValidationErrorDetail)f);
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Validation failed",
+                    Errors = errors
+                });
+            }
 
             var command = mapper.Map<GetSaleCommand>(id);
             var result = await mediator.Send(command, cancellationToken);
 
             if (result is null)
             {
-                return NotFound($"The sale with ID {id} does not exist in our database");
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    Message = $"The sale with ID {id} does not exist in our database",
+                    Errors = []
+                });
             }
 
-            return Ok(mapper.Map<GetSaleResponse>(result));
+            var response = mapper.Map<GetSaleResponse>(result);
+            return Ok(new ApiResponseWithData<GetSaleResponse>
+            {
+                Success = true,
+                Message = "Sale retrieved successfully",
+                Data = response
+            });
         }
 
-        
 
         /// <summary>
         /// Retrieves a paginated list of sales with optional filtering and ordering.
@@ -114,6 +135,55 @@ namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales
                 mapped, result.TotalCount, result.CurrentPage, result.Items.Count()
             ));
         }
-}
+        
+        /// <summary>
+        /// Updates an existing sale by ID
+        /// </summary>
+        /// <param name="id">The ID of the sale to update</param>
+        /// <param name="request">The updated sale data</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>The updated sale information</returns>
+        [HttpPut("{id}")]
+        [ProducesResponseType(typeof(ApiResponseWithData<UpdateSaleResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateSale([FromRoute] Guid id, [FromBody] UpdateSaleRequest request, CancellationToken cancellationToken)
+        {
+            var validator = new UpdateSaleRequestValidator();
+            var validationResult = await validator.ValidateAsync(request, cancellationToken);
+
+            if (!validationResult.IsValid)
+                return BadRequest(validationResult.Errors);
+
+            var command = mapper.Map<UpdateSaleCommand>(request) with { Id = id };
+
+            try
+            {
+                var result = await mediator.Send(command, cancellationToken);
+                var response = mapper.Map<UpdateSaleResponse>(result);
+                return Ok(response);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    Message = ex.Message,
+                    Errors = []
+                });
+            }
+            catch (ValidationException ex)
+            {
+                var errors = ex.Errors.Select(failure => (ValidationErrorDetail)failure);
+
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Validation failed",
+                    Errors = errors
+                });
+            }
+        }
+    }
 
 }

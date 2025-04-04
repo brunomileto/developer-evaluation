@@ -38,6 +38,51 @@ public class SaleRepository : ISaleRepository
     }
 
     /// <inheritdoc />
+    public async Task<Sale> UpdateAsync(Sale sale, CancellationToken cancellationToken = default)
+    {
+        var existingSale = await _context.Sales
+            .Include(s => s.Items)
+            .FirstOrDefaultAsync(s => s.Id == sale.Id, cancellationToken);
+
+        if (existingSale is null)
+            throw new KeyNotFoundException($"Sale with ID {sale.Id} not found");
+
+        // Atualiza os dados principais
+        existingSale.CustomerName = sale.CustomerName;
+        existingSale.BranchName = sale.BranchName;
+        existingSale.TotalAmount = sale.TotalAmount;
+        existingSale.Status = sale.Status;
+
+        // ✅ Remove primeiro os itens antigos do banco
+        var itemsToRemove = _context.SaleItems.Where(x => x.SaleId == existingSale.Id);
+        _context.SaleItems.RemoveRange(itemsToRemove);
+
+        // ✅ Depois adiciona novos itens
+        var newItems = sale.Items.Select(item => new SaleItem
+        {
+            SaleId = existingSale.Id,
+            ProductId = item.ProductId,
+            ProductName = item.ProductName,
+            UnitPrice = item.UnitPrice,
+            Quantity = item.Quantity,
+            Discount = item.Discount,
+            Total = item.Total,
+            DiscountType = item.DiscountType,
+            Status = item.Status
+        }).ToList();
+
+        existingSale.Items = newItems;
+
+        await _context.SaveChangesAsync(cancellationToken);
+        return existingSale;
+    }
+
+
+
+
+
+    
+    /// <inheritdoc />
     public async Task<(IEnumerable<Sale> Items, int TotalCount)> GetPagedRawAsync(
         int page,
         int size,
