@@ -47,17 +47,14 @@ public class SaleRepository : ISaleRepository
         if (existingSale is null)
             throw new KeyNotFoundException($"Sale with ID {sale.Id} not found");
 
-        // Atualiza os dados principais
         existingSale.CustomerName = sale.CustomerName;
         existingSale.BranchName = sale.BranchName;
         existingSale.TotalAmount = sale.TotalAmount;
         existingSale.Status = sale.Status;
 
-        // ✅ Remove primeiro os itens antigos do banco
         var itemsToRemove = _context.SaleItems.Where(x => x.SaleId == existingSale.Id);
         _context.SaleItems.RemoveRange(itemsToRemove);
 
-        // ✅ Depois adiciona novos itens
         var newItems = sale.Items.Select(item => new SaleItem
         {
             SaleId = existingSale.Id,
@@ -77,11 +74,6 @@ public class SaleRepository : ISaleRepository
         return existingSale;
     }
 
-
-
-
-
-    
     /// <inheritdoc />
     public async Task<(IEnumerable<Sale> Items, int TotalCount)> GetPagedRawAsync(
         int page,
@@ -143,9 +135,20 @@ public class SaleRepository : ISaleRepository
 
         return (items, totalCount);
     }
-
-    public Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    
+    /// <inheritdoc />
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var sale = await _context.Sales
+            .Include(s => s.Items)
+            .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+
+        if (sale is null)
+            return false;
+
+        _context.Sales.Remove(sale);
+        await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
+
 }
