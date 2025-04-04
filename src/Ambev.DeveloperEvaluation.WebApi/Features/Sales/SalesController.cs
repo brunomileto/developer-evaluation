@@ -42,10 +42,34 @@ namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales
                 return BadRequest(validationResult.Errors);
 
             var command = mapper.Map<CreateSaleCommand>(request);
-            var result = await mediator.Send(command, cancellationToken);
+            try
+            {
+                var result = await mediator.Send(command, cancellationToken);
 
-            var response = mapper.Map<CreateSaleResponse>(result);
-            return Created(string.Empty, null, response); 
+                var response = mapper.Map<CreateSaleResponse>(result);
+                return Created(string.Empty, null, response);
+            }
+            catch (ValidationException ex)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = ex.Message,
+                    Errors = ex.Errors.Select(e => new ValidationErrorDetail
+                    {
+                        Error = "ValidationError",
+                        Detail = e.ErrorMessage
+                    })
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiResponse
+                {
+                    Success = false,
+                    Message = ex.Message
+                });
+            }
         }
 
         /// <summary>
@@ -201,7 +225,7 @@ namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales
                 return BadRequest(new ApiResponse
                 {
                     Success = false,
-                    Message = "Validation failed",
+                    Message = ex.Message,
                     Errors = errors
                 });
             }
