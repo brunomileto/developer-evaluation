@@ -4,12 +4,14 @@ using AutoMapper;
 using Ambev.DeveloperEvaluation.WebApi.Common;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
+using Ambev.DeveloperEvaluation.Application.Sales.DeleteSale;
 using Ambev.DeveloperEvaluation.Application.Sales.GetSale;
 using Ambev.DeveloperEvaluation.Application.Sales.GetSales;
 using Ambev.DeveloperEvaluation.Common.Validation;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSales;
 using Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
+using Ambev.DeveloperEvaluation.WebApi.Features.Sales.DeleteSale;
 using Ambev.DeveloperEvaluation.WebApi.Features.Sales.UpdateSale;
 using FluentValidation;
 
@@ -184,6 +186,39 @@ namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales
                 });
             }
         }
+        
+        /// <summary>
+        /// Deletes an existing sale by its ID.
+        /// </summary>
+        /// <param name="id">The unique identifier of the sale to be deleted.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>No content if the deletion is successful; otherwise, an appropriate error response.</returns>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> DeleteSale([FromRoute] Guid id, CancellationToken cancellationToken)
+        {
+            var validator = new DeleteSaleRequestValidator();
+            var validation = await validator.ValidateAsync(new DeleteSaleRequest { Id = id }, cancellationToken);
+            if (!validation.IsValid)
+                return BadRequest(validation.Errors);
+
+            var command = new DeleteSaleCommand(id);
+            var result = await mediator.Send(command, cancellationToken);
+
+            if (result is null)
+            {
+                return NotFound(new ApiResponse
+                {
+                    Success = false,
+                    Message = "Sale not found"
+                });
+            }
+
+            return NoContent();
+        }
+
     }
 
 }
