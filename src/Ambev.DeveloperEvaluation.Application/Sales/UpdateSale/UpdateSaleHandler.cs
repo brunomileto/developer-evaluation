@@ -32,20 +32,19 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
         sale.BranchName = request.BranchName;
         sale.Items.Clear();
 
-        foreach (var item in request.Items)
+        foreach (var saleItem in request.Items.Select(item => new SaleItem
+                 {
+                     ProductId = item.ProductId,
+                     Quantity = item.Quantity,
+                     UnitPrice = item.UnitPrice,
+                 }))
         {
-            sale.Items.Add(new SaleItem
-            {
-                ProductId = item.ProductId,
-                Quantity = item.Quantity,
-                UnitPrice = item.UnitPrice,
-                Discount = item.Discount,
-                Total = (item.UnitPrice - item.Discount) * item.Quantity
-            });
+            saleItem.CalculateTotal();
+            sale.Items.Add(saleItem);
         }
 
-        sale.TotalAmount = sale.Items.Sum(i => i.Total);
-
+        sale.RecalculateTotal();
+        
         await _saleRepository.UpdateAsync(sale, cancellationToken);
 
         return _mapper.Map<UpdateSaleResult>(sale);

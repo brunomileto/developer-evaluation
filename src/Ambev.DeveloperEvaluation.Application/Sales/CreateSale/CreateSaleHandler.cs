@@ -39,13 +39,10 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
         if (!validationResult.IsValid)
             throw new ValidationException(validationResult.Errors);
 
-        // Map command to domain entity
         var sale = _mapper.Map<Sale>(command);
-
-        // Persiste a venda
+        
         var createdSale = await _saleRepository.CreateAsync(sale, cancellationToken);
 
-        // Retorna resultado
         var result = _mapper.Map<CreateSaleResult>(createdSale);
         return result;
     }

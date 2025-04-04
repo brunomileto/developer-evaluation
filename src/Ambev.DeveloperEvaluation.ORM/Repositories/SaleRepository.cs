@@ -49,9 +49,9 @@ public class SaleRepository : ISaleRepository
 
         existingSale.CustomerName = sale.CustomerName;
         existingSale.BranchName = sale.BranchName;
-        existingSale.TotalAmount = sale.TotalAmount;
         existingSale.Status = sale.Status;
-
+        existingSale.RecalculateTotal();
+        
         var itemsToRemove = _context.SaleItems.Where(x => x.SaleId == existingSale.Id);
         _context.SaleItems.RemoveRange(itemsToRemove);
 
@@ -62,8 +62,6 @@ public class SaleRepository : ISaleRepository
             ProductName = item.ProductName,
             UnitPrice = item.UnitPrice,
             Quantity = item.Quantity,
-            Discount = item.Discount,
-            Total = item.Total,
             DiscountType = item.DiscountType,
             Status = item.Status
         }).ToList();
