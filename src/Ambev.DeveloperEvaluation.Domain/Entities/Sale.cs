@@ -1,6 +1,7 @@
 using Ambev.DeveloperEvaluation.Common.Validation;
 using Ambev.DeveloperEvaluation.Domain.Common;
 using Ambev.DeveloperEvaluation.Domain.Enums;
+using Ambev.DeveloperEvaluation.Domain.Specifications;
 using Ambev.DeveloperEvaluation.Domain.Validation;
 
 namespace Ambev.DeveloperEvaluation.Domain.Entities;
@@ -68,6 +69,20 @@ public class Sale : BaseEntity
 
         TotalAmount = Items.Sum(i => i.Total);
     }
+    
+    /// <summary>
+    /// Checks whether the sale is currently active.
+    /// </summary>
+    /// <returns>
+    /// True if the sale's <see cref="Status"/> is <c>Status.Active</c>; otherwise, false.
+    /// </returns>
+    public bool IsActive()
+    {
+        var spec = new ActiveSaleSpecification();
+        return spec.IsSatisfiedBy(this);
+    }
+
+
     
     /// <summary>
     /// Validates the sale using the SaleValidator.

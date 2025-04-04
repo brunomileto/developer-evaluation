@@ -2,6 +2,7 @@ using Ambev.DeveloperEvaluation.Common.Extensions;
 using Ambev.DeveloperEvaluation.Common.Validation;
 using Ambev.DeveloperEvaluation.Domain.Common;
 using Ambev.DeveloperEvaluation.Domain.Enums;
+using Ambev.DeveloperEvaluation.Domain.Specifications;
 using Ambev.DeveloperEvaluation.Domain.Validation;
 
 namespace Ambev.DeveloperEvaluation.Domain.Entities;
@@ -68,6 +69,18 @@ public class SaleItem : BaseEntity
         };
 
         Total = (UnitPrice * Quantity) - Discount;
+    }
+    
+    /// <summary>
+    /// Checks whether the current sale item has a valid quantity based on business rules.
+    /// </summary>
+    /// <returns>
+    /// True if the quantity is greater than 0 and less than or equal to 20; otherwise, false.
+    /// </returns>
+    public bool IsValidQuantity()
+    {
+        var spec = new ValidQuantitySpecification();
+        return spec.IsSatisfiedBy(this);
     }
 
 
