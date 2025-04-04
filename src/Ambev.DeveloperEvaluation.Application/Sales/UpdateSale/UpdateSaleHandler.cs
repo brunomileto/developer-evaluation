@@ -45,6 +45,12 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
 
         sale.RecalculateTotal();
         
+        if (!sale.IsActive())
+            throw new InvalidOperationException("Sale is not active");
+
+        if (sale.Items.Any(i => !i.IsValidQuantity()))
+            throw new ValidationException("Invalid quantity in one or more sale items");
+        
         await _saleRepository.UpdateAsync(sale, cancellationToken);
 
         return _mapper.Map<UpdateSaleResult>(sale);

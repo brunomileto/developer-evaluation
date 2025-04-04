@@ -41,6 +41,12 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
 
         var sale = _mapper.Map<Sale>(command);
         
+        if (!sale.IsActive())
+            throw new InvalidOperationException("Sale is not active");
+
+        if (sale.Items.Any(i => !i.IsValidQuantity()))
+            throw new ValidationException("Invalid quantity in one or more sale items");
+
         var createdSale = await _saleRepository.CreateAsync(sale, cancellationToken);
 
         var result = _mapper.Map<CreateSaleResult>(createdSale);
