@@ -1,5 +1,7 @@
+using Ambev.DeveloperEvaluation.Common.Validation;
 using Ambev.DeveloperEvaluation.Domain.Common;
 using Ambev.DeveloperEvaluation.Domain.Enums;
+using Ambev.DeveloperEvaluation.Domain.Validation;
 
 namespace Ambev.DeveloperEvaluation.Domain.Entities;
 
@@ -41,7 +43,7 @@ public class Sale : BaseEntity
     /// <summary>
     /// Total value of the sale (sum of all item totals).
     /// </summary>
-    public decimal TotalAmount { get; set; }
+    public decimal TotalAmount { get; private set; }
 
     /// <summary>
     /// Gets the sale's current status.
@@ -53,7 +55,34 @@ public class Sale : BaseEntity
     /// List of items that compose the sale.
     /// </summary>
     public List<SaleItem> Items { get; set; } = [];
+    
+    /// <summary>
+    /// Applies discount rules and calculates total sale amount.
+    /// </summary>
+    public void RecalculateTotal()
+    {
+        foreach (var item in Items)
+        {
+            item.CalculateTotal();
+        }
 
+        TotalAmount = Items.Sum(i => i.Total);
+    }
+    
+    /// <summary>
+    /// Validates the sale using the SaleValidator.
+    /// </summary>
+    public ValidationResultDetail Validate()
+    {
+        var validator = new SaleValidator();
+        var result = validator.Validate(this);
+        return new ValidationResultDetail
+        {
+            IsValid = result.IsValid,
+            Errors = result.Errors.Select(e => (ValidationErrorDetail)e)
+        };
+    }
+    
     /// <summary>
     /// Initializes a new instance of the Sale class.
     /// </summary>
