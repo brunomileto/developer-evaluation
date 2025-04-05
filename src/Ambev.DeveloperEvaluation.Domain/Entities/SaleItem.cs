@@ -69,29 +69,18 @@ public class SaleItem : BaseEntity
     /// </summary>
     /// <param name="quantity">The quantity of the product in the sale item.</param>
     /// <returns>The appropriate <see cref="DiscountType"/> based on business rules.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when quantity exceeds allowed limit (greater than 20).</exception>
     private static DiscountType GetDiscountType(int quantity)
     {
+
+        if (quantity is <= 0 or > 20)
+            return DiscountType.None;
+
         return quantity switch
         {
-            > 20 => throw new InvalidOperationException("Cannot sell more than 20 units of a single product."),
             >= 10 => DiscountType.TwentyPercent,
             >= 4 => DiscountType.TenPercent,
             _ => DiscountType.None
         };
-    }
-
-    
-    /// <summary>
-    /// Checks whether the current sale item has a valid quantity based on business rules.
-    /// </summary>
-    /// <returns>
-    /// True if the quantity is greater than 0 and less than or equal to 20; otherwise, false.
-    /// </returns>
-    public bool IsValidQuantity()
-    {
-        var spec = new ValidQuantitySpecification();
-        return spec.IsSatisfiedBy(this);
     }
 
 
