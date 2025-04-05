@@ -1,6 +1,7 @@
 using Ambev.DeveloperEvaluation.Common.Validation;
 using Ambev.DeveloperEvaluation.Domain.Common;
 using Ambev.DeveloperEvaluation.Domain.Enums;
+using Ambev.DeveloperEvaluation.Domain.Sales.Events;
 using Ambev.DeveloperEvaluation.Domain.Specifications;
 using Ambev.DeveloperEvaluation.Domain.Validation;
 
@@ -11,6 +12,7 @@ namespace Ambev.DeveloperEvaluation.Domain.Entities;
 /// </summary>
 public class Sale : BaseEntity
 {
+    
     /// <summary>
     /// Unique number that identifies the sale (e.g., invoice number).
     /// </summary>
@@ -122,8 +124,9 @@ public class Sale : BaseEntity
             Status = Status.Active,
             SaleNumber = saleNumber
         };
-
+        
         sale.RecalculateTotal();
+        sale.AddDomainEvent(new SaleCreatedDomainEvent(sale.Id, sale.CustomerId, sale.SaleDate));
         return sale;
     }
     
@@ -154,6 +157,7 @@ public class Sale : BaseEntity
         };
         
         sale.RecalculateTotal();
+        sale.AddDomainEvent(new SaleCreatedDomainEvent(sale.Id, sale.CustomerId, sale.SaleDate));
         return sale;
     }
 
