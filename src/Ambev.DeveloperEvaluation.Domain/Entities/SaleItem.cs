@@ -60,16 +60,27 @@ public class SaleItem : BaseEntity
     /// </summary>
     public void CalculateTotal()
     {
-        Discount = Quantity switch
-        {
-            > 20 => throw new InvalidOperationException("Cannot sell more than 20 units of a single product."),
-            >= 10 => UnitPrice * Quantity * DiscountType.TwentyPercent.ToPercentage(),
-            >= 4 => UnitPrice * Quantity * DiscountType.TenPercent.ToPercentage(),
-            _ => DiscountType.None.ToPercentage()
-        };
-
+        Discount = UnitPrice * Quantity * DiscountType.ToPercentage();
         Total = (UnitPrice * Quantity) - Discount;
     }
+
+    /// <summary>
+    /// Determines the applicable discount type based on the quantity purchased.
+    /// </summary>
+    /// <param name="quantity">The quantity of the product in the sale item.</param>
+    /// <returns>The appropriate <see cref="DiscountType"/> based on business rules.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when quantity exceeds allowed limit (greater than 20).</exception>
+    private static DiscountType GetDiscountType(int quantity)
+    {
+        return quantity switch
+        {
+            > 20 => throw new InvalidOperationException("Cannot sell more than 20 units of a single product."),
+            >= 10 => DiscountType.TwentyPercent,
+            >= 4 => DiscountType.TenPercent,
+            _ => DiscountType.None
+        };
+    }
+
     
     /// <summary>
     /// Checks whether the current sale item has a valid quantity based on business rules.
@@ -107,4 +118,36 @@ public class SaleItem : BaseEntity
     /// Navigation property: The sale this item belongs to.
     /// </summary>
     public Sale Sale { get; set; } = null!;
+    
+    /// <summary>
+    /// Creates a new instance of <see cref="SaleItem"/> using the provided details and automatically calculates
+    /// discount and total based on quantity and unit price.
+    /// </summary>
+    /// <param name="productId">The unique identifier of the product.</param>
+    /// <param name="productName">The name of the product.</param>
+    /// <param name="unitPrice">The price per unit of the product.</param>
+    /// <param name="quantity">The quantity of the product being sold.</param>
+    /// <param name="saleId">The ID of the sale this item belongs to.</param>
+    /// <returns>A fully initialized and calculated <see cref="SaleItem"/>.</returns>
+    public static SaleItem Create(Guid productId, string productName, decimal unitPrice, int quantity, Guid saleId)
+    {
+        var item = new SaleItem
+        {
+            ProductId = productId,
+            ProductName = productName,
+            UnitPrice = unitPrice,
+            Quantity = quantity,
+            DiscountType = GetDiscountType(quantity),
+            SaleId = saleId,
+            Status = Status.Active
+        };
+
+        item.CalculateTotal();
+        return item;
+    }
+    
+    /// <summary>
+    /// Private constructor to enforce controlled creation via <see cref="Create"/> factory method.
+    /// </summary>
+    private SaleItem() { }
 }
