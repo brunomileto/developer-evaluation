@@ -99,10 +99,39 @@ public class Sale : BaseEntity
     }
     
     /// <summary>
-    /// Initializes a new instance of the Sale class.
+    /// Factory method to create a new <see cref="Sale"/> instance with all required data and automatic total calculation.
     /// </summary>
-    public Sale()
+    /// <param name="customerId">The unique identifier of the customer making the purchase.</param>
+    /// <param name="customerName">The full name of the customer at the time of the sale (denormalized).</param>
+    /// <param name="branchId">The unique identifier of the branch where the sale occurred.</param>
+    /// <param name="branchName">The name of the branch at the time of the sale (denormalized).</param>
+    /// <param name="items">The list of <see cref="SaleItem"/> instances that make up the sale.</param>
+    /// <returns>
+    /// A new <see cref="Sale"/> instance with totals calculated and all business rules applied.
+    /// </returns>
+    public static Sale Create(Guid customerId, string customerName, Guid branchId, string branchName, List<SaleItem> items)
+    {
+        var sale = new Sale
+        {
+            CustomerId = customerId,
+            CustomerName = customerName,
+            BranchId = branchId,
+            BranchName = branchName,
+            Items = items,
+            Status = Status.Active
+        };
+
+        sale.RecalculateTotal();
+        return sale;
+    }
+
+    /// <summary>
+    /// Private constructor used to initialize default values when creating a new <see cref="Sale"/> instance.
+    /// Sets the <see cref="SaleDate"/> to the current UTC date and time.
+    /// </summary>
+    private Sale()
     {
         SaleDate = DateTime.UtcNow;
     }
+
 }
