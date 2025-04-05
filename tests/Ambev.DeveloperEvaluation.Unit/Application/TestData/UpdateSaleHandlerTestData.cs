@@ -62,6 +62,7 @@ public static class UpdateSaleHandlerTestData
             customerName: faker.Name.FullName(),
             branchId: Guid.NewGuid(),
             branchName: faker.Company.CompanyName(),
+            saleNumber: faker.Random.Replace("S-###########"),
             items: items
         );
 

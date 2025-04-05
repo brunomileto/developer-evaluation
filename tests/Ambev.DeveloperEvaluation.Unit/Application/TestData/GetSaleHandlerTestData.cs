@@ -32,6 +32,7 @@ public static class GetSaleHandlerTestData
         var branchId = Guid.NewGuid();
         var customerName = Faker.Person.FullName;
         var branchName = Faker.Company.CompanyName();
+        var saleNumber = Faker.Random.Replace("S-###########");
 
         var items = new List<SaleItem>
         {
@@ -44,6 +45,6 @@ public static class GetSaleHandlerTestData
             )
         };
 
-        return Sale.Create(customerId, customerName, branchId, branchName, items);
+        return Sale.Create(customerId, customerName, branchId, branchName, saleNumber, items);
     }
 }

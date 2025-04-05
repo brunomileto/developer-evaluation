@@ -72,7 +72,8 @@ public static class CreateSaleHandlerTestData
             customerName: faker.Person.FullName,
             branchId: Guid.NewGuid(),
             branchName: faker.Company.CompanyName(),
-            items: new List<SaleItem> { item }
+            saleNumber: faker.Random.Replace("S-###########"),
+            items: [item]
         );
     }
 }
