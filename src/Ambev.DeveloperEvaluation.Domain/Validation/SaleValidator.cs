@@ -40,19 +40,11 @@ public class SaleValidator : AbstractValidator<Sale>
         RuleFor(s => s.Items)
             .NotEmpty().WithMessage("At least one item is required in the sale.");
 
-        RuleForEach(s => s.Items).SetValidator(new SaleItemValidator());
-        
         RuleFor(x => x)
             .Must(sale => new ActiveSaleSpecification().IsSatisfiedBy(sale))
             .WithMessage("Sale must be active");
-
         
-        RuleForEach(x => x.Items).ChildRules(items =>
-        {
-            items.RuleFor(i => i)
-                .Must(new ValidQuantitySpecification().IsSatisfiedBy)
-                .WithMessage("Quantity must be between 1 and 20");
-        });
+        RuleForEach(s => s.Items).SetValidator(new SaleItemValidator());
 
     }
 }
