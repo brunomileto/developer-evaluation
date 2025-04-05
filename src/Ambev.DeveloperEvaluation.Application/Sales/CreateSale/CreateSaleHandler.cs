@@ -3,6 +3,7 @@ using MediatR;
 using FluentValidation;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using FluentValidation.Results;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 
@@ -40,12 +41,16 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
             throw new ValidationException(validationResult.Errors);
 
         var sale = _mapper.Map<Sale>(command);
-        
-        if (!sale.IsActive())
-            throw new InvalidOperationException("Sale is not active");
 
-        if (sale.Items.Any(i => !i.IsValidQuantity()))
-            throw new ValidationException("Invalid quantity in one or more sale items");
+        var domainValidation = sale.Validate();
+        if (!domainValidation.IsValid)
+        {
+            var failures = domainValidation.Errors
+                .Select(e => new ValidationFailure(e.Error, e.Detail))
+                .ToList();
+
+            throw new ValidationException("Sale validation failed.", failures);
+        }
 
         var createdSale = await _saleRepository.CreateAsync(sale, cancellationToken);
 
