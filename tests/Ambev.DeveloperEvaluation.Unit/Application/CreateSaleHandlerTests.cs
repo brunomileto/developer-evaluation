@@ -80,14 +80,15 @@ public class CreateSaleHandlerTests
         // Given
         var command = CreateSaleHandlerTestData.GenerateValidCommand();
         var sale = CreateSaleHandlerTestData.GenerateValidSale();
-        sale.Items[0].Quantity = 0; // Invalid quantity
+        sale.Items.First().Quantity = 21; // Invalid quantity
 
-        _mapper.Map<Sale>(command).Returns(sale);
-
+        _mapper.Map<Sale>(Arg.Any<CreateSaleCommand>()).Returns(sale);
+        
         // When
         var act = () => _handler.Handle(command, CancellationToken.None);
 
         // Then
-        await act.Should().ThrowAsync<ValidationException>().WithMessage("*quantity*");
+        var exception = await act.Should().ThrowAsync<ValidationException>();
+        exception.Which.Errors.Should().Contain(e => e.ErrorMessage.Contains("quantity", StringComparison.OrdinalIgnoreCase));
     }
 }
