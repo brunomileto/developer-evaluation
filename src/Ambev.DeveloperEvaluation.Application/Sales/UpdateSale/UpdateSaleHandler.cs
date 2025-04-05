@@ -3,6 +3,7 @@ using MediatR;
 using FluentValidation;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using FluentValidation.Results;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 
@@ -30,8 +31,9 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
 
         sale.CustomerName = request.CustomerName;
         sale.BranchName = request.BranchName;
-        sale.Items.Clear();
 
+        List<SaleItem> newSaleItems = [];
+        
         foreach (var saleItem in request.Items)
         {
             var updatedSaleItem = SaleItem.Create(
@@ -40,16 +42,28 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
                 saleItem.UnitPrice,
                 saleItem.Quantity,
                 sale.Id);
-            sale.Items.Add(updatedSaleItem);
+            newSaleItems.Add(updatedSaleItem);
         }
-        
-        sale.RecalculateTotal();
-        
-        if (!sale.IsActive())
-            throw new InvalidOperationException("Sale is not active");
 
-        if (sale.Items.Any(i => !i.IsValidQuantity()))
-            throw new ValidationException("Invalid quantity in one or more sale items");
+        var updatedSale = Sale.Create(
+            id: request.Id,
+            customerId: sale.CustomerId,
+            customerName: request.CustomerName,
+            branchId: sale.BranchId,
+            branchName: request.BranchName,
+            saleNumber: sale.SaleNumber,
+            items: newSaleItems
+        );
+        
+        var domainValidation = updatedSale.Validate();
+        if (!domainValidation.IsValid)
+        {
+            var failures = domainValidation.Errors
+                .Select(e => new ValidationFailure(e.Error, e.Detail))
+                .ToList();
+
+            throw new ValidationException("Sale validation failed.", failures);
+        }
         
         await _saleRepository.UpdateAsync(sale, cancellationToken);
 
