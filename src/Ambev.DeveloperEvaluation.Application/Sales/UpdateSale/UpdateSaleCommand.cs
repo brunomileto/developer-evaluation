@@ -10,5 +10,5 @@ public record UpdateSaleCommand : IRequest<UpdateSaleResult>
     public Guid Id { get; init; }
     public string CustomerName { get; init; } = string.Empty;
     public string BranchName { get; init; } = string.Empty;
-    public List<UpdateSaleItem> Items { get; init; } = new();
+    public List<UpdateSaleItem> Items { get; init; } = [];
 }
