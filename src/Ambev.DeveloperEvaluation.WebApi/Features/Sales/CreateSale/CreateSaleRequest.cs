@@ -27,7 +27,12 @@ public class CreateSaleRequest
     /// Gets or sets the branch name at the time of sale (denormalized).
     /// </summary>
     public string BranchName { get; set; } = string.Empty;
-
+    
+    /// <summary>
+    /// Unique number that identifies the sale (e.g., invoice number).
+    /// </summary>
+    public string SaleNumber { get; set; } = string.Empty;
+    
     /// <summary>
     /// Gets or sets the sale date. If not provided, defaults to current server time.
     /// </summary>

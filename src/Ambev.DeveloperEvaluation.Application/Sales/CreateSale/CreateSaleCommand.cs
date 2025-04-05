@@ -38,6 +38,11 @@ public class CreateSaleCommand : IRequest<CreateSaleResult>
     /// Gets or sets the sale date. Defaults to current UTC time.
     /// </summary>
     public DateTime SaleDate { get; set; } = DateTime.UtcNow;
+    
+    /// <summary>
+    /// Unique number that identifies the sale (e.g., invoice number).
+    /// </summary>
+    public string SaleNumber { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the list of sale items to include in the sale.
