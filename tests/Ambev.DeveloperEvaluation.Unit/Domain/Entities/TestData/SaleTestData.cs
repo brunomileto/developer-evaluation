@@ -86,4 +86,10 @@ public static class SaleTestData
         sale.RecalculateTotal();
         return sale;
     }
+    
+    public static void SetTotalAmount(Sale sale, decimal value)
+    {
+        typeof(Sale).GetProperty("TotalAmount")!.SetValue(sale, value);
+    }
+
 }
