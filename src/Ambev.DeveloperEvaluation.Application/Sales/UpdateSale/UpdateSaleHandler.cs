@@ -3,6 +3,7 @@ using MediatR;
 using FluentValidation;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using FluentValidation.Results;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 
@@ -30,26 +31,39 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
 
         sale.CustomerName = request.CustomerName;
         sale.BranchName = request.BranchName;
-        sale.Items.Clear();
 
-        foreach (var saleItem in request.Items.Select(item => new SaleItem
-                 {
-                     ProductId = item.ProductId,
-                     Quantity = item.Quantity,
-                     UnitPrice = item.UnitPrice,
-                 }))
+        List<SaleItem> newSaleItems = [];
+        
+        foreach (var saleItem in request.Items)
         {
-            saleItem.CalculateTotal();
-            sale.Items.Add(saleItem);
+            var updatedSaleItem = SaleItem.Create(
+                saleItem.ProductId,
+                saleItem.ProductName,
+                saleItem.UnitPrice,
+                saleItem.Quantity,
+                sale.Id);
+            newSaleItems.Add(updatedSaleItem);
         }
 
-        sale.RecalculateTotal();
+        var updatedSale = Sale.Create(
+            id: request.Id,
+            customerId: sale.CustomerId,
+            customerName: request.CustomerName,
+            branchId: sale.BranchId,
+            branchName: request.BranchName,
+            saleNumber: sale.SaleNumber,
+            items: newSaleItems
+        );
         
-        if (!sale.IsActive())
-            throw new InvalidOperationException("Sale is not active");
+        var domainValidation = updatedSale.Validate();
+        if (!domainValidation.IsValid)
+        {
+            var failures = domainValidation.Errors
+                .Select(e => new ValidationFailure(e.Error, e.Detail))
+                .ToList();
 
-        if (sale.Items.Any(i => !i.IsValidQuantity()))
-            throw new ValidationException("Invalid quantity in one or more sale items");
+            throw new ValidationException("Sale validation failed.", failures);
+        }
         
         await _saleRepository.UpdateAsync(sale, cancellationToken);
 

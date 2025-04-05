@@ -28,5 +28,10 @@ public class SaleItemValidator : AbstractValidator<SaleItem>
 
         RuleFor(i => i.Total)
             .GreaterThanOrEqualTo(0).WithMessage("Total must be zero or positive.");
+        
+        RuleFor(x => x.Quantity)
+            .GreaterThan(0).WithMessage("Quantity must be greater than zero.")
+            .LessThanOrEqualTo(20).WithMessage("Quantity cannot exceed 20.");
+
     }
 }

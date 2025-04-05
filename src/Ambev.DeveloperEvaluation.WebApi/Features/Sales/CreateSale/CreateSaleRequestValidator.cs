@@ -29,7 +29,10 @@ public class CreateSaleRequestValidator : AbstractValidator<CreateSaleRequest>
 
         RuleFor(sale => sale.BranchName)
             .NotEmpty().MaximumLength(100);
-
+        
+        RuleFor(sale => sale.SaleNumber)
+            .NotEmpty().MaximumLength(100);
+        
         RuleFor(sale => sale.Items)
             .NotEmpty().WithMessage("At least one item is required.");
 

@@ -1,4 +1,5 @@
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Domain.Enums;
 using Ambev.DeveloperEvaluation.Domain.Specifications;
 using FluentValidation;
 
@@ -11,7 +12,8 @@ public class SaleValidator : AbstractValidator<Sale>
 {
     public SaleValidator()
     {
-        // Regras para campos principais
+        var now = DateTime.UtcNow;
+        
         RuleFor(s => s.SaleNumber)
             .NotEmpty().WithMessage("Sale number is required.")
             .MaximumLength(30);
@@ -23,6 +25,10 @@ public class SaleValidator : AbstractValidator<Sale>
             .NotEmpty().WithMessage("Customer name is required.")
             .MaximumLength(100);
 
+        RuleFor(s => s.Status)
+            .NotEqual(Status.Cancelled)
+            .WithMessage("Sale must be active.");
+
         RuleFor(s => s.BranchId)
             .NotEmpty().WithMessage("Branch ID is required.");
 
@@ -32,7 +38,7 @@ public class SaleValidator : AbstractValidator<Sale>
 
         RuleFor(s => s.SaleDate)
             .NotEmpty().WithMessage("Sale date is required.")
-            .LessThanOrEqualTo(DateTime.UtcNow).WithMessage("Sale date cannot be in the future.");
+            .LessThanOrEqualTo(now).WithMessage("Sale date cannot be in the future.");
 
         RuleFor(s => s.TotalAmount)
             .GreaterThanOrEqualTo(0).WithMessage("Total amount must be zero or positive.");
@@ -40,19 +46,11 @@ public class SaleValidator : AbstractValidator<Sale>
         RuleFor(s => s.Items)
             .NotEmpty().WithMessage("At least one item is required in the sale.");
 
-        RuleForEach(s => s.Items).SetValidator(new SaleItemValidator());
-        
         RuleFor(x => x)
             .Must(sale => new ActiveSaleSpecification().IsSatisfiedBy(sale))
             .WithMessage("Sale must be active");
-
         
-        RuleForEach(x => x.Items).ChildRules(items =>
-        {
-            items.RuleFor(i => i)
-                .Must(new ValidQuantitySpecification().IsSatisfiedBy)
-                .WithMessage("Quantity must be between 1 and 20");
-        });
+        RuleForEach(s => s.Items).SetValidator(new SaleItemValidator());
 
     }
 }
