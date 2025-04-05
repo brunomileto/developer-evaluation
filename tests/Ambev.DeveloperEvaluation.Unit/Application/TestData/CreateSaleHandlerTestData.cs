@@ -39,6 +39,7 @@ public static class CreateSaleHandlerTestData
         .RuleFor(s => s.CustomerName, f => f.Name.FullName())
         .RuleFor(s => s.BranchId, f => Guid.NewGuid())
         .RuleFor(s => s.BranchName, f => f.Company.CompanyName())
+        .RuleFor(s => s.SaleNumber, f => f.Random.Replace("S-########"))
         .RuleFor(s => s.SaleDate, f => f.Date.PastOffset(1).UtcDateTime)
         .RuleFor(s => s.Items, f => itemFaker.Generate(f.Random.Int(1, 5)));
 
