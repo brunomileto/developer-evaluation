@@ -32,17 +32,17 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
         sale.BranchName = request.BranchName;
         sale.Items.Clear();
 
-        foreach (var saleItem in request.Items.Select(item => new SaleItem
-                 {
-                     ProductId = item.ProductId,
-                     Quantity = item.Quantity,
-                     UnitPrice = item.UnitPrice,
-                 }))
+        foreach (var saleItem in request.Items)
         {
-            saleItem.CalculateTotal();
-            sale.Items.Add(saleItem);
+            var updatedSaleItem = SaleItem.Create(
+                saleItem.ProductId,
+                saleItem.ProductName,
+                saleItem.UnitPrice,
+                saleItem.Quantity,
+                sale.Id);
+            sale.Items.Add(updatedSaleItem);
         }
-
+        
         sale.RecalculateTotal();
         
         if (!sale.IsActive())

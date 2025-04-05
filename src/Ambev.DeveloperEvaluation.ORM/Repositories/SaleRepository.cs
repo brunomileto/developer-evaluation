@@ -54,17 +54,16 @@ public class SaleRepository : ISaleRepository
         
         var itemsToRemove = _context.SaleItems.Where(x => x.SaleId == existingSale.Id);
         _context.SaleItems.RemoveRange(itemsToRemove);
-
-        var newItems = sale.Items.Select(item => new SaleItem
-        {
-            SaleId = existingSale.Id,
-            ProductId = item.ProductId,
-            ProductName = item.ProductName,
-            UnitPrice = item.UnitPrice,
-            Quantity = item.Quantity,
-            DiscountType = item.DiscountType,
-            Status = item.Status
-        }).ToList();
+        
+        var newItems = sale.Items
+            .Select(item => SaleItem.Create(
+                item.ProductId,
+                item.ProductName,
+                item.UnitPrice,
+                item.Quantity,
+                existingSale.Id
+            ))
+            .ToList();
 
         existingSale.Items = newItems;
 
