@@ -36,21 +36,24 @@ public class SaleItemTests
     }
 
     /// <summary>
-    /// Tests that creating a sale item with quantity over 20 throws an exception.
+    /// Tests that creating a sale item with quantity over 20 results in validation error.
     /// </summary>
-    [Fact(DisplayName = "Given excessive quantity When creating item Then throws exception")]
-    public void Given_TooManyItems_When_Creating_Then_ThrowsException()
+    [Fact(DisplayName = "Given excessive quantity When validating item Then returns invalid")]
+    public void Given_TooManyItems_When_Validated_Then_ShouldBeInvalid()
     {
         // Arrange
         var (productId, productName, unitPrice, quantity, saleId) = SaleItemTestData.GenerateOverflowQuantityParams();
+        var item = SaleItem.Create(productId, productName, unitPrice, quantity, saleId);
 
         // Act
-        var act = () => SaleItem.Create(productId, productName, unitPrice, quantity, saleId);
+        var result = item.Validate();
 
         // Assert
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("Cannot sell more than 20 units of a single product.");
+        result.IsValid.Should().BeFalse();
+        result.Errors.Should().ContainSingle(e => e.Detail == "Quantity cannot exceed 20.");
     }
+
+
 
     /// <summary>
     /// Tests that an item with quantity 0 is considered invalid.
@@ -62,7 +65,7 @@ public class SaleItemTests
         var item = SaleItemTestData.GenerateInvalidQuantityItem();
 
         // Act
-        var isValid = item.IsValidQuantity();
+        var isValid = item.Validate().IsValid;
 
         // Assert
         isValid.Should().BeFalse();
