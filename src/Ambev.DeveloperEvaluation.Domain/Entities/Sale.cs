@@ -105,11 +105,12 @@ public class Sale : BaseEntity
     /// <param name="customerName">The full name of the customer at the time of the sale (denormalized).</param>
     /// <param name="branchId">The unique identifier of the branch where the sale occurred.</param>
     /// <param name="branchName">The name of the branch at the time of the sale (denormalized).</param>
+    /// <param name="saleNumber">The unique number that identifies the sale.</param>
     /// <param name="items">The list of <see cref="SaleItem"/> instances that make up the sale.</param>
     /// <returns>
     /// A new <see cref="Sale"/> instance with totals calculated and all business rules applied.
     /// </returns>
-    public static Sale Create(Guid customerId, string customerName, Guid branchId, string branchName, List<SaleItem> items)
+    public static Sale Create(Guid customerId, string customerName, Guid branchId, string branchName, string saleNumber, List<SaleItem> items)
     {
         var sale = new Sale
         {
@@ -118,7 +119,8 @@ public class Sale : BaseEntity
             BranchId = branchId,
             BranchName = branchName,
             Items = items,
-            Status = Status.Active
+            Status = Status.Active,
+            SaleNumber = saleNumber
         };
 
         sale.RecalculateTotal();
