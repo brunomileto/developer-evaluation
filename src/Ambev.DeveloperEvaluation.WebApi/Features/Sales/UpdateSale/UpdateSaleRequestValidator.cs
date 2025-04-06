@@ -15,6 +15,9 @@ public class UpdateSaleRequestValidator : AbstractValidator<UpdateSaleRequest>
         RuleFor(x => x.BranchName)
             .NotEmpty().MaximumLength(100);
 
+        RuleFor(x => x.Status)
+            .NotNull();
+
         RuleFor(x => x.Items)
             .NotEmpty().WithMessage("At least one item is required.");
 
