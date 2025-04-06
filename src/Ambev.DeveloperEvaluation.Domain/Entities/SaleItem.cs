@@ -97,6 +97,15 @@ public class SaleItem : BaseEntity
             Errors = result.Errors.Select(e => (ValidationErrorDetail)e)
         };
     }
+    public bool HasMeaningfulChanges(SaleItem? other)
+    {
+        if (other == null) return true;
+
+        return Quantity != other.Quantity
+               || UnitPrice != other.UnitPrice
+               || Discount != other.Discount
+               || ProductId != other.ProductId;
+    }
 
     /// <summary>
     /// External identity: Sale ID to which this item belongs.

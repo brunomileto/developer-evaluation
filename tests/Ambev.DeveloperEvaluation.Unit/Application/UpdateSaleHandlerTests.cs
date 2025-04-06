@@ -1,3 +1,4 @@
+using Ambev.DeveloperEvaluation.Application.Common;
 using Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 using Ambev.DeveloperEvaluation.Domain.Entities;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
@@ -18,6 +19,7 @@ public class UpdateSaleHandlerTests
     private readonly ISaleRepository _saleRepository;
     private readonly IMapper _mapper;
     private readonly UpdateSaleHandler _handler;
+    private readonly IDomainEventDispatcher _domainEventDispatcher;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UpdateSaleHandlerTests"/> class.
@@ -27,7 +29,8 @@ public class UpdateSaleHandlerTests
     {
         _saleRepository = Substitute.For<ISaleRepository>();
         _mapper = Substitute.For<IMapper>();
-        _handler = new UpdateSaleHandler(_saleRepository, _mapper);
+        _domainEventDispatcher = Substitute.For<IDomainEventDispatcher>();
+        _handler = new UpdateSaleHandler(_saleRepository, _mapper, _domainEventDispatcher);
     }
 
     /// <summary>
@@ -110,4 +113,28 @@ public class UpdateSaleHandlerTests
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*quantity*");
     }
+    
+    /// <summary>
+    /// Tests that domain events are dispatched after a successful sale update.
+    /// </summary>
+    [Fact(DisplayName = "Given valid sale update When handling Then dispatches domain events")]
+    public async Task Handle_ValidRequest_DispatchesDomainEvents()
+    {
+        // Given
+        var command = UpdateSaleHandlerTestData.GenerateValidCommand();
+        var existingSale = UpdateSaleHandlerTestData.GenerateExistingSale(command.Id);
+        existingSale.Id = command.Id;
+        var result = new UpdateSaleResult { Id = existingSale.Id };
+
+        _saleRepository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>()).Returns(existingSale);
+        _saleRepository.UpdateAsync(existingSale, Arg.Any<CancellationToken>()).Returns(existingSale);
+        _mapper.Map<UpdateSaleResult>(existingSale).Returns(result);
+
+        // When
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Then
+        await _domainEventDispatcher.Received(1).DispatchEventsAsync(existingSale, Arg.Any<CancellationToken>());
+    }
+
 }

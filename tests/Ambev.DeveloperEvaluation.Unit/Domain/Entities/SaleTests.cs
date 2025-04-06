@@ -14,12 +14,11 @@ public class SaleTests
     /// <summary>
     /// Tests that a newly created sale is considered active.
     /// </summary>
-    [Fact(DisplayName = "Sale should be active when status is set to Active")]
+    [Fact(DisplayName = "Sale should be active on default creation")]
     public void Given_SaleWithActiveStatus_When_CheckingIsActive_Then_ShouldReturnTrue()
     {
         // Arrange
-        var sale = SaleTestData.GenerateValidSale();
-        sale.Status = Status.Active;
+        var sale = SaleTestData.GenerateSale();
 
         // Act
         var isActive = sale.IsActive();
@@ -35,9 +34,8 @@ public class SaleTests
     public void Given_SaleWithCancelledStatus_When_CheckingIsActive_Then_ShouldReturnFalse()
     {
         // Arrange
-        var sale = SaleTestData.GenerateValidSale();
-        sale.Status = Status.Cancelled;
-
+        var sale = SaleTestData.GenerateCancelledSale();
+        
         // Act
         var isActive = sale.IsActive();
 
@@ -52,7 +50,7 @@ public class SaleTests
     public void Given_ValidSale_When_Validated_Then_ShouldBeValid()
     {
         // Arrange
-        var sale = SaleTestData.GenerateValidSale();
+        var sale = SaleTestData.GenerateSale();
 
         // Act
         var result = sale.Validate();
@@ -69,7 +67,7 @@ public class SaleTests
     public void Given_SaleWithItems_When_RecalculateTotal_Then_TotalAmountShouldBeCorrect()
     {
         // Arrange
-        var sale = SaleTestData.GenerateValidSale();
+        var sale = SaleTestData.GenerateSale();
 
         var expectedTotal = sale.Items.Sum(i => i.Total);
 

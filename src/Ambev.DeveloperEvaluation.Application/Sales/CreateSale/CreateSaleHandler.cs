@@ -1,3 +1,4 @@
+using Ambev.DeveloperEvaluation.Application.Common;
 using AutoMapper;
 using MediatR;
 using FluentValidation;
@@ -14,16 +15,18 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
 {
     private readonly ISaleRepository _saleRepository;
     private readonly IMapper _mapper;
+    private readonly IDomainEventDispatcher _eventDomainDispatcher;
 
     /// <summary>
     /// Initializes a new instance of CreateSaleHandler
     /// </summary>
     /// <param name="saleRepository">The sale repository</param>
     /// <param name="mapper">The AutoMapper instance</param>
-    public CreateSaleHandler(ISaleRepository saleRepository, IMapper mapper)
+    public CreateSaleHandler(ISaleRepository saleRepository, IMapper mapper, IDomainEventDispatcher domainDispatcher)
     {
         _saleRepository = saleRepository;
         _mapper = mapper;
+        _eventDomainDispatcher = domainDispatcher;
     }
 
     /// <summary>
@@ -54,6 +57,8 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
 
         var createdSale = await _saleRepository.CreateAsync(sale, cancellationToken);
 
+        await _eventDomainDispatcher.DispatchEventsAsync(sale, cancellationToken);
+        
         var result = _mapper.Map<CreateSaleResult>(createdSale);
         return result;
     }

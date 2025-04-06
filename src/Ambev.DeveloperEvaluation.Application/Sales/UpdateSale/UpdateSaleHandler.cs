@@ -1,3 +1,4 @@
+using Ambev.DeveloperEvaluation.Application.Common;
 using AutoMapper;
 using MediatR;
 using FluentValidation;
@@ -11,11 +12,13 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
 {
     private readonly ISaleRepository _saleRepository;
     private readonly IMapper _mapper;
+    private readonly IDomainEventDispatcher _eventDomainDispatcher;
 
-    public UpdateSaleHandler(ISaleRepository saleRepository, IMapper mapper)
+    public UpdateSaleHandler(ISaleRepository saleRepository, IMapper mapper, IDomainEventDispatcher domainDispatcher)
     {
         _saleRepository = saleRepository;
         _mapper = mapper;
+        _eventDomainDispatcher = domainDispatcher;
     }
 
     public async Task<UpdateSaleResult> Handle(UpdateSaleCommand request, CancellationToken cancellationToken)
@@ -28,34 +31,21 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
         var sale = await _saleRepository.GetByIdAsync(request.Id, cancellationToken);
         if (sale == null)
             throw new KeyNotFoundException($"Sale with ID {request.Id} not found");
-
-        sale.CustomerName = request.CustomerName;
-        sale.BranchName = request.BranchName;
-
-        List<SaleItem> newSaleItems = [];
         
-        foreach (var saleItem in request.Items)
-        {
-            var updatedSaleItem = SaleItem.Create(
-                saleItem.ProductId,
-                saleItem.ProductName,
-                saleItem.UnitPrice,
-                saleItem.Quantity,
-                sale.Id);
-            newSaleItems.Add(updatedSaleItem);
-        }
-
-        var updatedSale = Sale.Create(
-            id: request.Id,
-            customerId: sale.CustomerId,
+        sale.Update(
             customerName: request.CustomerName,
-            branchId: sale.BranchId,
             branchName: request.BranchName,
-            saleNumber: sale.SaleNumber,
-            items: newSaleItems
-        );
+            status: request.Status,
+            items: request.Items.Select(item => SaleItem.Create(
+                item.ProductId,
+                item.ProductName,
+                item.UnitPrice,
+                item.Quantity,
+                sale.Id
+                )).ToList()
+            );
         
-        var domainValidation = updatedSale.Validate();
+        var domainValidation = sale.Validate();
         if (!domainValidation.IsValid)
         {
             var failures = domainValidation.Errors
@@ -66,6 +56,8 @@ public class UpdateSaleHandler : IRequestHandler<UpdateSaleCommand, UpdateSaleRe
         }
         
         await _saleRepository.UpdateAsync(sale, cancellationToken);
+
+        await _eventDomainDispatcher.DispatchEventsAsync(sale, cancellationToken);
 
         return _mapper.Map<UpdateSaleResult>(sale);
     }

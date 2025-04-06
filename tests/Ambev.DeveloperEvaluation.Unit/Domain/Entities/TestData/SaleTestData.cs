@@ -32,23 +32,35 @@ public static class SaleTestData
     /// Generates a valid <see cref="Sale"/> with one or more valid items.
     /// </summary>
     /// <returns>A valid <see cref="Sale"/> instance.</returns>
-    public static Sale GenerateValidSale()
+    public static Sale GenerateSale(
+        Guid? customerId = null,
+        string? customerName = null,
+        Guid? branchId = null,
+        string? branchName = null,
+        string? saleNumber = null,
+        decimal? totalAmout = null,
+        DateTime? saleDate = null,
+        Status? status = null,
+        List<SaleItem>? items = null)
     {
-        var customerId = Guid.NewGuid();
-        var branchId = Guid.NewGuid();
-        var items = new List<SaleItem>
-        {
-            GenerateValidSaleItem()
-        };
-
-        return Sale.Create(
-            customerId: customerId,
-            customerName: Faker.Person.FullName,
-            branchId: branchId,
-            branchName: Faker.Company.CompanyName(),
-            saleNumber: Faker.Random.Replace("S-###########"),
-            items: items
+        
+        var sale =  Sale.Create(
+            customerId: customerId ?? Guid.NewGuid(),
+            customerName: customerName ?? Faker.Person.FullName,
+            branchId: branchId ?? Guid.NewGuid(),
+            branchName: branchName ?? Faker.Company.CompanyName(),
+            saleNumber: saleNumber ?? Faker.Random.Replace("S-###########"),
+            items: (List<SaleItem>?)items ?? ([GenerateValidSaleItem()])
         );
+        
+        if (totalAmout is not null)
+            SetTotalAmount(sale, totalAmout.GetValueOrDefault());
+        if (saleDate is not null)
+            SetCreatedAt(sale, saleDate.GetValueOrDefault());
+        if (status is not null)
+            SetStatus(sale, status.GetValueOrDefault());
+        
+        return sale;
     }
 
     /// <summary>
@@ -57,8 +69,8 @@ public static class SaleTestData
     /// <returns>A <see cref="Sale"/> instance with cancelled status.</returns>
     public static Sale GenerateCancelledSale()
     {
-        var sale = GenerateValidSale();
-        sale.Status = Status.Cancelled;
+        var sale = GenerateSale();
+        sale.Update(sale.CustomerName, sale.BranchName, Status.Cancelled, sale.Items);
         return sale;
     }
 
@@ -82,7 +94,7 @@ public static class SaleTestData
     /// <returns>A <see cref="Sale"/> with known total amount calculated.</returns>
     public static Sale GenerateSaleWithCalculatedTotal()
     {
-        var sale = GenerateValidSale();
+        var sale = GenerateSale();
         sale.RecalculateTotal();
         return sale;
     }
@@ -90,6 +102,16 @@ public static class SaleTestData
     public static void SetTotalAmount(Sale sale, decimal value)
     {
         typeof(Sale).GetProperty("TotalAmount")!.SetValue(sale, value);
+    }
+    
+    public static void SetCreatedAt(Sale sale, DateTime date)
+    {
+        typeof(Sale).GetProperty("SaleDate")!.SetValue(sale, date);
+    }
+    
+    public static void SetStatus(Sale sale, Status status)
+    {
+        typeof(Sale).GetProperty("Status")!.SetValue(sale, status);
     }
 
 }
