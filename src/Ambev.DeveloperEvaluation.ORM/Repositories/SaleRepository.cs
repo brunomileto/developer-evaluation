@@ -46,11 +46,6 @@ public class SaleRepository : ISaleRepository
 
         if (existingSale is null)
             throw new KeyNotFoundException($"Sale with ID {sale.Id} not found");
-
-        existingSale.CustomerName = sale.CustomerName;
-        existingSale.BranchName = sale.BranchName;
-        existingSale.Status = sale.Status;
-        existingSale.RecalculateTotal();
         
         var itemsToRemove = _context.SaleItems.Where(x => x.SaleId == existingSale.Id);
         _context.SaleItems.RemoveRange(itemsToRemove);
@@ -65,7 +60,7 @@ public class SaleRepository : ISaleRepository
             ))
             .ToList();
 
-        existingSale.Items = newItems;
+        existingSale.Update(sale.CustomerName, sale.BranchName, sale.Status, newItems);
 
         await _context.SaveChangesAsync(cancellationToken);
         return existingSale;
