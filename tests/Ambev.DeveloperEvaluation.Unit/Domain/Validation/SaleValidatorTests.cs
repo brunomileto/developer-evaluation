@@ -25,24 +25,24 @@ public class SaleValidatorTests
     public void Given_ValidSale_When_Validated_Then_ShouldNotHaveErrors()
     {
         // Arrange
-        var sale = SaleTestData.GenerateValidSale();
-        sale.SaleDate = DateTime.UtcNow.AddSeconds(-1);
-
+        var sale = SaleTestData.GenerateSale(saleDate: DateTime.UtcNow.AddSeconds(-1));
+        
         // Act
         var result = _validator.TestValidate(sale);
 
-        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 
     [Fact(DisplayName = "Empty sale number should fail validation")]
     public void Given_EmptySaleNumber_When_Validated_Then_ShouldHaveError()
     {
-        var sale = SaleTestData.GenerateValidSale();
-        sale.SaleNumber = string.Empty;
+        // Arrange
+        var sale = SaleTestData.GenerateSale(saleNumber: string.Empty);
 
+        // Act
         var result = _validator.TestValidate(sale);
 
+        // Act
         result.ShouldHaveValidationErrorFor(s => s.SaleNumber)
             .WithErrorMessage("Sale number is required.");
     }
@@ -50,11 +50,13 @@ public class SaleValidatorTests
     [Fact(DisplayName = "Future sale date should fail validation")]
     public void Given_FutureSaleDate_When_Validated_Then_ShouldHaveError()
     {
-        var sale = SaleTestData.GenerateValidSale();
-        sale.SaleDate = DateTime.UtcNow.AddDays(1);
-
+        // Arrange
+        var sale = SaleTestData.GenerateSale(saleDate: DateTime.UtcNow.AddDays(1));
+        
+        // Act
         var result = _validator.TestValidate(sale);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(s => s.SaleDate)
             .WithErrorMessage("Sale date cannot be in the future.");
     }
@@ -62,8 +64,7 @@ public class SaleValidatorTests
     [Fact(DisplayName = "Missing customer name should fail validation")]
     public void Given_EmptyCustomerName_When_Validated_Then_ShouldHaveError()
     {
-        var sale = SaleTestData.GenerateValidSale();
-        sale.CustomerName = "";
+        var sale = SaleTestData.GenerateSale(customerName: string.Empty);
 
         var result = _validator.TestValidate(sale);
 
@@ -71,11 +72,10 @@ public class SaleValidatorTests
             .WithErrorMessage("Customer name is required.");
     }
 
-    [Fact(DisplayName = "Cancelled sale should fail business rule validation")]
+    [Fact(DisplayName = "Cancelled sale should fail validation")]
     public void Given_InactiveSale_When_Validated_Then_ShouldHaveError()
     {
-        var sale = SaleTestData.GenerateValidSale();
-        sale.Status = Status.Cancelled;
+        var sale = SaleTestData.GenerateSale(status: Status.Cancelled);
 
         var result = _validator.TestValidate(sale);
 
@@ -86,8 +86,7 @@ public class SaleValidatorTests
     [Fact(DisplayName = "Empty items list should fail validation")]
     public void Given_EmptyItems_When_Validated_Then_ShouldHaveError()
     {
-        var sale = SaleTestData.GenerateValidSale();
-        sale.Items.Clear();
+        var sale = SaleTestData.GenerateSale(items: []);
 
         var result = _validator.TestValidate(sale);
 
@@ -98,7 +97,7 @@ public class SaleValidatorTests
     [Fact(DisplayName = "Negative total amount should fail validation")]
     public void Given_NegativeTotalAmount_When_Validated_Then_ShouldHaveError()
     {
-        var sale = SaleTestData.GenerateValidSale();
+        var sale = SaleTestData.GenerateSale();
         SaleTestData.SetTotalAmount(sale, -10m);
 
         var result = _validator.TestValidate(sale);
