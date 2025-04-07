@@ -16,7 +16,7 @@ Make sure the following tools are installed on your machine:
 
 ```bash
 git clone https://github.com/brunomileto/developer-evaluation.git
-cd DeveloperStore
+cd developer-evaluation
 ```
 
 ### Ports
