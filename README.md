@@ -1,5 +1,10 @@
 # Developer Evaluation Project
 
+## Getting Started
+
+See [Getting Started](/.docs/getting-started.md) for instructions on how to set up and run this project in a development environment.
+
+
 `READ CAREFULLY`
 
 ## Instructions
